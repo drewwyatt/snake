@@ -1,1 +1,1 @@
-ReactDOMRe.renderToElementWithId(App.make(), "app");
+ReactDOMRe.renderToElementWithId(<App />, "app");
