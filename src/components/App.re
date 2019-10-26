@@ -1,6 +1,6 @@
 let cells =
-  Array.make(100, Models.Empty)
-  |> Array.mapi((i, c) => i == 45 ? Models.Player : c);
+  Array.make(100, Cell.Empty)
+  |> Array.mapi((i, c) => i == 45 ? Cell.Player : c);
 
 [@react.componenr]
 let make = () =>

@@ -12,9 +12,9 @@ let to_styles = length =>
 
 let to_class_name = cell =>
   switch (cell) {
-  | Models.Apple => "cell apple"
-  | Models.Empty => "cell"
-  | Models.Player => "cell player"
+  | Cell.Apple => "cell apple"
+  | Cell.Empty => "cell"
+  | Cell.Player => "cell player"
   };
 
 [@react.component]
