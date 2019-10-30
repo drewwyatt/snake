@@ -4,7 +4,7 @@ type t =
   | Down
   | Left;
 
-let apply = (idx, size, direction) =>
+let apply = (idx, ~size, ~direction) =>
   switch (direction) {
   | Up => idx - size < 0 ? size * (size - 1) + idx : idx - size
   | Right => (idx + 1) mod size == 0 ? idx - (size - 1) : idx + 1

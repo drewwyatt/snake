@@ -19,20 +19,28 @@ let useInterval = (callback, delay) => {
   );
 };
 
+let _player_is_in_space = (playerSpaces, idx) =>
+  switch (List.find(i => i == idx, playerSpaces)) {
+  | _ => true
+  | exception Not_found => false
+  };
+
 let useCells = (size, direction) => {
-  let (position, setPosition) =
-    React.useState(() => size * size / 2 + size / 2);
+  let (positions, setPositions) =
+    React.useState(() => [size * size / 2 + size / 2]);
 
   let loop =
-    React.useCallback2(
-      () => setPosition(_ => Direction.apply(position, size, direction)),
-      (direction, position),
+    React.useCallback1(
+      () => setPositions(List.map(Direction.apply(~size, ~direction))),
+      [|direction|],
     );
 
   useInterval(loop, 500);
 
   Array.make(size * size, Cell.Empty)
-  |> Array.mapi((i, c) => i == position ? Cell.Player : c);
+  |> Array.mapi((i, c) =>
+       _player_is_in_space(positions, i) ? Cell.Player : c
+     );
 };
 
 open Webapi.Dom;
