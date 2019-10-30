@@ -19,27 +19,73 @@ let useInterval = (callback, delay) => {
   );
 };
 
-let _player_is_in_space = (playerSpaces, idx) =>
-  switch (List.find(i => i == idx, playerSpaces)) {
-  | _ => true
-  | exception Not_found => false
+let rec _prependHead = (prepended, rest) =>
+  switch (rest) {
+  | [head, ...tail] when List.length(rest) > 1 =>
+    _prependHead(List.append(prepended, [head]), tail)
+  | _ => prepended
   };
+
+let _last = list => List.nth(list, List.length(list) - 1);
+
+let _appendSnake = (positions, ~directions, ~size) => {
+  let p = _last(positions);
+  let direction = _last(directions);
+  List.append(positions, [Direction.apply(p, ~direction, ~size)]);
+};
 
 let useCells = (size, direction) => {
   let (positions, setPositions) =
     React.useState(() => [size * size / 2 + size / 2]);
+  let (directions, setDirections) = React.useState(() => [direction]);
+  let (runs, setRuns) = React.useState(() => 0);
+  let tick = React.useCallback1(() => setRuns(r => r + 1), [||]);
+
+  React.useEffect1(
+    () => {
+      if (List.length(positions) == List.length(directions)) {
+        setDirections(_ => _prependHead([direction], directions));
+      } else {
+        Js.log("Oh no.");
+      };
+      None;
+    },
+    [|direction|],
+  );
+
+  React.useEffect1(
+    () => {
+      if (List.length(positions) > List.length(directions)) {
+        setDirections(_ => List.concat([[direction], directions]));
+      };
+      None;
+    },
+    [|List.length(positions)|],
+  );
 
   let loop =
-    React.useCallback1(
-      () => setPositions(List.map(Direction.apply(~size, ~direction))),
-      [|direction|],
+    React.useCallback3(
+      () => {
+        tick();
+        let positions =
+          runs mod 3 == 0 ?
+            _appendSnake(positions, ~directions, ~size) : positions;
+
+        let pos =
+          directions
+          |> List.mapi((i, direction) =>
+               Direction.apply(List.nth(positions, i), ~size, ~direction)
+             );
+        setPositions(_ => pos);
+      },
+      (directions, positions, runs),
     );
 
   useInterval(loop, 500);
 
   Array.make(size * size, Cell.Empty)
   |> Array.mapi((i, c) =>
-       _player_is_in_space(positions, i) ? Cell.Player : c
+       List.exists(p => p == i, positions) ? Cell.Player : c
      );
 };
 
