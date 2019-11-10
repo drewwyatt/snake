@@ -18,70 +18,81 @@ let useInterval = (callback, delay) => {
     [|delay|],
   );
 };
+/*
+ let _last = list => List.nth(list, List.length(list) - 1);
 
-let rec _prependHead = (prepended, rest) =>
-  switch (rest) {
-  | [head, ...tail] when List.length(rest) > 1 =>
-    _prependHead(List.append(prepended, [head]), tail)
-  | _ => prepended
-  };
+ let _appendSnake = (positions, ~directions, ~size) => {
+   let p = _last(positions);
+   let direction = _last(directions);
+   List.append(positions, [Direction.apply(p, ~direction, ~size)]);
+ };
+ */
+/*
+ let _useCells = (size, direction) => {
+   let (positions, setPositions) =
+     React.useState(() => [size * size / 2 + size / 2]);
+   let (directions, setDirections) = React.useState(() => [direction]);
+   let (runs, setRuns) = React.useState(() => 0);
+   let tick = React.useCallback1(() => setRuns(r => r + 1), [||]);
 
-let _last = list => List.nth(list, List.length(list) - 1);
+   React.useEffect1(
+     () => {
+       if (List.length(positions) == List.length(directions)) {
+         setDirections(_ => Utils.cycle([direction], directions));
+       } else {
+         Js.log("Oh no.");
+       };
+       None;
+     },
+     [|direction|],
+   );
 
-let _appendSnake = (positions, ~directions, ~size) => {
-  let p = _last(positions);
-  let direction = _last(directions);
-  List.append(positions, [Direction.apply(p, ~direction, ~size)]);
-};
+   let loop =
+     React.useCallback3(
+       () => {
+         tick();
+         let pos =
+           directions
+           |> List.mapi((i, direction) =>
+                Direction.apply(List.nth(positions, i), ~size, ~direction)
+              );
+         setPositions(_ => pos);
+       },
+       (directions, positions, runs),
+     );
 
+   useInterval(loop, 500);
+
+   Array.make(size * size, Cell.Empty)
+   |> Array.mapi((i, c) =>
+        List.exists(p => p == i, positions) ? Cell.Player : c
+      );
+ };
+ */
+
+let _toAppliedDirection = (size, directions, idx, position) =>
+  Direction.apply(List.nth(directions, idx), ~forSize=size, position);
+open Utils;
 let useCells = (size, direction) => {
-  let (positions, setPositions) =
-    React.useState(() => [size * size / 2 + size / 2]);
-  let (directions, setDirections) = React.useState(() => [direction]);
-  let (runs, setRuns) = React.useState(() => 0);
-  let tick = React.useCallback1(() => setRuns(r => r + 1), [||]);
+  let (positions, setPositions) = React.useState(() => [36, 46, 56]);
+  let (directions, setDirections) =
+    React.useState(() => [Direction.Left, Direction.Up, Direction.Up]);
 
-  React.useEffect1(
-    () => {
-      if (List.length(positions) == List.length(directions)) {
-        setDirections(_ => _prependHead([direction], directions));
-      } else {
-        Js.log("Oh no.");
-      };
-      None;
-    },
-    [|direction|],
-  );
-
-  React.useEffect1(
-    () => {
-      if (List.length(positions) > List.length(directions)) {
-        setDirections(_ => List.concat([[direction], directions]));
-      };
-      None;
-    },
-    [|List.length(positions)|],
-  );
-
-  let loop =
+  let tick =
     React.useCallback3(
       () => {
-        tick();
-        let positions =
-          runs mod 3 == 0 ?
-            _appendSnake(positions, ~directions, ~size) : positions;
-
-        let pos =
-          directions
-          |> List.mapi((i, direction) =>
-               Direction.apply(List.nth(positions, i), ~size, ~direction)
-             );
-        setPositions(_ => pos);
+        /* set positions */
+        positions
+        |> List.mapi(_toAppliedDirection(size, directions))
+        |> wrap
+        |> setPositions;
+        /* set directions */
+        [direction] |> cycle(directions) |> wrap |> setDirections;
       },
-      (directions, positions, runs),
+      (positions, directions, size),
     );
 
-  useInterval(loop, 500);
+  useInterval(tick, 1000);
 
   Array.make(size * size, Cell.Empty)
   |> Array.mapi((i, c) =>
