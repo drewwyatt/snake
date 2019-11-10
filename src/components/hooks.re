@@ -37,7 +37,18 @@ let useCells = (size, direction) => {
 
   let tick =
     React.useCallback3(
-      () => setSnake(List.map(_toAppliedDirection(size, direction))),
+      () => {
+        let shifted =
+          snake |> List.map(_toAppliedDirection(size, direction));
+        let (head, dir) = shifted |> List.hd;
+        if (head == apple) {
+          let newApple = 99;
+          setSnake(_ => List.append([(apple, dir)], snake));
+          setApple(_ => newApple);
+        } else {
+          setSnake(_ => shifted);
+        };
+      },
       (snake, direction, size),
     );
 
