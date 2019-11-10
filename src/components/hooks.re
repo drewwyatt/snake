@@ -29,22 +29,23 @@ let _toAppliedDirection = (size, direction) => {
 };
 
 let useCells = (size, direction) => {
-  let (player, setPlayer) =
+  let (snake, setSnake) =
     React.useState(() =>
       [(36, Direction.Up), (46, Direction.Up), (56, Direction.Up)]
     );
+  let (apple, setApple) = React.useState(() => 10);
 
   let tick =
     React.useCallback3(
-      () => setPlayer(List.map(_toAppliedDirection(size, direction))),
-      (player, direction, size),
+      () => setSnake(List.map(_toAppliedDirection(size, direction))),
+      (snake, direction, size),
     );
 
   useInterval(tick, 1000);
 
   Array.make(size * size, Cell.Empty)
-  |> Array.mapi((i, c) =>
-       List.exists(((p, _)) => p == i, player) ? Cell.Player : c
+  |> Array.mapi(
+       Cell.Set.map([Cell.Set.ofSnake(snake), Cell.Set.ofApple(apple)]),
      );
 };
 
